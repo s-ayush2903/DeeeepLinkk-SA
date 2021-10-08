@@ -48,19 +48,31 @@ class MainActivity : AppCompatActivity() {
             findViewById<TextInputLayout>(R.id.uri_til).editText?.setText("")
         }
         findViewById<CheckBox>(R.id.optional_slash_flag).apply {
+            Log.d(
+                TAG,
+                "onCreate: setting checkboxxx: ${
+                    getPreferences(Context.MODE_PRIVATE).getBoolean(
+                        appendTrailingSlashFlag,
+                        slashState
+                    )
+                }"
+            )
             isChecked = getPreferences(Context.MODE_PRIVATE).getBoolean(
                 appendTrailingSlashFlag,
                 slashState
             )
             setOnClickListener {
-                Log.d(TAG, "Checkbox: $this.isChecked")
-                slashState = isChecked }
+                Log.d(TAG, "Checkbox: ${this.isChecked}")
+                slashState = isChecked
+            }
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        // fix it nigga | It works as expected when @triggerDeepLink button is clicked, otherwise wrong in all cases
         with(getPreferences(Context.MODE_PRIVATE).edit()) {
+            Log.d(TAG, "onDestroy: called, $slashState")
             putBoolean(appendTrailingSlashFlag, slashState)
             if (this@MainActivity::rawUri.isInitialized) {
                 putString(cachedDeepLinkFlag, rawUri)
