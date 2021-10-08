@@ -21,12 +21,12 @@ import com.google.android.material.textfield.TextInputLayout
 class MainActivity : AppCompatActivity() {
     private val TAG = "DeepLink"
 
-    private lateinit var uri: Uri
+    private lateinit var parentLayout: View
     private lateinit var rawUri: String
+    private lateinit var uri: Uri
 
     private val cachedDeepLinkFlag = "cached_dl"
     private val famDl = "fp://fampay.in/"
-    private lateinit var parentLayout: View
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,14 +45,17 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        with(getPreferences(Context.MODE_PRIVATE).edit()) {
-            putString(cachedDeepLinkFlag, rawUri)
-            apply()
+        if (this::rawUri.isInitialized) {
+            with(getPreferences(Context.MODE_PRIVATE).edit()) {
+                putString(cachedDeepLinkFlag, rawUri)
+                apply()
+            }
         }
     }
 
     private fun triggerDeepLink() {
-        rawUri = findViewById<TextInputLayout>(R.id.uri_til).editText?.text?.trim().toString().lowercase()
+        rawUri = findViewById<TextInputLayout>(R.id.uri_til).editText?.text?.trim().toString()
+            .lowercase()
         Log.d(TAG, "rawUri: $rawUri")
         if (rawUri.isNotBlank()) {
             uri = Uri.parse(rawUri.appendSlashIfNeeded())
@@ -64,17 +67,17 @@ class MainActivity : AppCompatActivity() {
                 startActivity(potentialIntent)
                 finish()
             } catch (e: ActivityNotFoundException) {
-                // FIXME: 08/10/21  Replace with SnackBar & Coroutines
-                Toast.makeText(
-                    this,
-                    "No Application present to handle this Deep Link \nRedirecting to default browser!",
-                    looong
-                ).show()
+                if (rawUri.startsWith("https://") || rawUri.startsWith("http://")) {
+                    // FIXME: 08/10/21  Replace with SnackBar & Coroutines
+                    Toast.makeText(
+                        this,
+                        "No Application present to handle this Deep Link \nRedirecting to default browser!",
+                        looong
+                    ).show()
 //                parentLayout.makeSnack(
 //                    "No Application present to handle this Deep Link \nRedirecting to default browser!",
 //                    short
 //                )
-                if (rawUri.startsWith("https://") || rawUri.startsWith("http://")) {
                     startActivity(Intent(Intent.ACTION_VIEW, uri).apply {
                         addCategory(CATEGORY_BROWSABLE)
                         flags = FLAG_ACTIVITY_NEW_TASK
@@ -97,12 +100,7 @@ class MainActivity : AppCompatActivity() {
     private fun hideKeyboard() {
         val imm: InputMethodManager =
             getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
-        var view = currentFocus
-        if (view == null) {
-            view = View(this)
-
-        }
-        imm.hideSoftInputFromWindow(view.windowToken, 0)
+        imm.hideSoftInputFromWindow(currentFocus?.windowToken, 0)
     }
 
     companion object {
