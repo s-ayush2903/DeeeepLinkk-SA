@@ -12,9 +12,10 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.view.inputmethod.InputMethodManager
+import android.widget.Button
+import android.widget.CheckBox
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.AppCompatButton
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputLayout
 
@@ -27,6 +28,8 @@ class MainActivity : AppCompatActivity() {
 
     private val cachedDeepLinkFlag = "cached_dl"
     private val famDl = "fp://fampay.in/"
+    private val appendTrailingSlashFlag = "wanna_slash"
+    private var slashState: Boolean = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,19 +40,32 @@ class MainActivity : AppCompatActivity() {
             getPreferences(Context.MODE_PRIVATE)
                 .getString(cachedDeepLinkFlag, famDl)
         )
-        findViewById<AppCompatButton>(R.id.deepLink_triggerer).setOnClickListener {
+        findViewById<Button>(R.id.deepLink_triggerer).setOnClickListener {
             hideKeyboard()
             triggerDeepLink()
+        }
+        findViewById<Button>(R.id.clear_all).setOnClickListener {
+            findViewById<TextInputLayout>(R.id.uri_til).editText?.setText("")
+        }
+        findViewById<CheckBox>(R.id.optional_slash_flag).apply {
+            isChecked = getPreferences(Context.MODE_PRIVATE).getBoolean(
+                appendTrailingSlashFlag,
+                slashState
+            )
+            setOnClickListener {
+                Log.d(TAG, "Checkbox: $this.isChecked")
+                slashState = isChecked }
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        if (this::rawUri.isInitialized) {
-            with(getPreferences(Context.MODE_PRIVATE).edit()) {
+        with(getPreferences(Context.MODE_PRIVATE).edit()) {
+            putBoolean(appendTrailingSlashFlag, slashState)
+            if (this@MainActivity::rawUri.isInitialized) {
                 putString(cachedDeepLinkFlag, rawUri)
-                apply()
             }
+            apply()
         }
     }
 
@@ -58,7 +74,9 @@ class MainActivity : AppCompatActivity() {
             .lowercase()
         Log.d(TAG, "rawUri: $rawUri")
         if (rawUri.isNotBlank()) {
-            uri = Uri.parse(rawUri.appendSlashIfNeeded())
+            rawUri =
+                if (findViewById<CheckBox>(R.id.optional_slash_flag).isChecked) rawUri.appendSlashIfNeeded() else rawUri
+            uri = Uri.parse(rawUri)
             try {
                 val potentialIntent = Intent(Intent.ACTION_VIEW, uri).apply {
                     addCategory(CATEGORY_BROWSABLE)
