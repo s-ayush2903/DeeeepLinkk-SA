@@ -74,7 +74,7 @@ class MainActivity : AppCompatActivity() {
         with(getPreferences(Context.MODE_PRIVATE).edit()) {
             Log.d(TAG, "onDestroy: called, $slashState")
             putBoolean(appendTrailingSlashFlag, slashState)
-            if (this@MainActivity::rawUri.isInitialized) {
+            if (this@MainActivity::rawUri.isInitialized && rawUri.isNotBlank()) {
                 putString(cachedDeepLinkFlag, rawUri)
             }
             apply()
