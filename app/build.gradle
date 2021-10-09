@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
+    id "com.diffplug.spotless" version "5.15.0"
 }
 
 android {
@@ -31,6 +32,21 @@ android {
     }
     buildFeatures {
         viewBinding true
+    }
+}
+
+spotless {
+    kotlin  {
+        target "**/*.kt"
+        targetExclude "**/build/*"
+        ktlint("0.41.0").userData(["indent_size": "2", "continuation_indent_size": "2"])
+        ktfmt().googleStyle()
+    }
+    format("xml") {
+        target("**/*.xml")
+        targetExclude("**/build/", ".idea/")
+        prettier(["prettier": "2.0.5", "@prettier/plugin-xml": "0.13.0"])
+                .config(["parser": "xml", "tabWidth": 4])
     }
 }
 

@@ -1,10 +1,12 @@
-<?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8" ?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    tools:context=".MainActivity"
+>
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/uri_til"
@@ -14,13 +16,15 @@
         android:layout_marginStart="22dp"
         android:layout_marginEnd="22dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+    >
 
         <com.google.android.material.textfield.TextInputEditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="URI"
-            android:inputType="textUri" />
+            android:inputType="textUri"
+        />
     </com.google.android.material.textfield.TextInputLayout>
 
     <CheckBox
@@ -30,7 +34,7 @@
         android:text="Append Slash if Needed"
         app:layout_constraintBottom_toTopOf="@id/uri_til"
         app:layout_constraintEnd_toEndOf="@id/uri_til"
-        />
+    />
 
     <Button
         android:id="@+id/deepLink_triggerer"
@@ -43,14 +47,16 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintLeft_toRightOf="@id/guideline"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/uri_til" />
+        app:layout_constraintTop_toBottomOf="@id/uri_til"
+    />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.5" />
+        app:layout_constraintGuide_percent="0.5"
+    />
 
     <Button
         android:id="@+id/clear_all"
@@ -61,5 +67,6 @@
         android:text="Clear URI"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toLeftOf="@id/guideline"
-        app:layout_constraintTop_toTopOf="@id/deepLink_triggerer" />
+        app:layout_constraintTop_toTopOf="@id/deepLink_triggerer"
+    />
 </androidx.constraintlayout.widget.ConstraintLayout>
