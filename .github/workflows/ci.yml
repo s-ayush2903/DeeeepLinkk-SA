@@ -8,12 +8,35 @@ jobs:
     runs-on: ubuntu-18.04
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
         with:
           fetch-depth: 1
+      
+      - name: Env vars
+        id: vars
+        shell: bash
+        run: |
+          echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+          echo "::set-output name=sha_short::$(git rev-parse --short HEAD)" 
 
       - name: Build Application
         run: ./gradlew assembleDebug
+        
+      - name: Commit APK
+        run: |
+          git config --local user.email "${{ secrets.COMMIT_EMAIL }}"
+          git config --local user.name "${{ secrets.HANDLE }}"
+          mkdir apk && cd $_
+          mv ../app/build/outputs/apk/debug/app-debug.apk .
+          git add .
+          git commit -m "Latest APK as of ${{ steps.vars.outputs.sha_short }} @ ${{ steps.vars.outputs.branch }}" 
+      
+      - name: Push APK
+        uses: ad-m/github-push-action@master
+        with: 
+         github_token: ${{ secrets.PT }}
+         branch: "apk"
+         force: true
 
       - name: Publish Build Artifact(APK)
         uses: actions/upload-artifact@v2.2.0
