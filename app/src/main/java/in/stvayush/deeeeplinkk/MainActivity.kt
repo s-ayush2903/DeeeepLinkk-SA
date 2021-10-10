@@ -8,14 +8,18 @@ import android.content.Intent.CATEGORY_BROWSABLE
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.content.Intent.FLAG_ACTIVITY_REQUIRE_NON_BROWSER
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.view.inputmethod.InputMethodManager
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.snackbar.Snackbar
 import `in`.stvayush.deeeeplinkk.databinding.ActivityMainBinding
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
   private val TAG = "DeepLink"
@@ -40,10 +44,6 @@ class MainActivity : AppCompatActivity() {
       uriTil.editText?.setText(
         getPreferences(Context.MODE_PRIVATE).getString(cachedDeepLinkFlag, defDl)
       )
-      deepLinkTriggerer.setOnClickListener {
-        hideKeyboard()
-        triggerDeepLink()
-      }
       clearAll.setOnClickListener { uriTil.editText?.setText("") }
       optionalSlashFlag.apply {
         Log.d(
@@ -62,6 +62,13 @@ class MainActivity : AppCompatActivity() {
           slashState = isChecked
         }
       }
+      deepLinkTriggerer.setOnClickListener {
+        hideKeyboard()
+        CoroutineScope(Dispatchers.Main.immediate).launch {
+          rawUri = uriTil.editText?.text?.trim().toString().lowercase()
+          triggerDeepLink(rawUri, optionalSlashFlag.isChecked)
+        }
+      }
     }
   }
 
@@ -78,33 +85,42 @@ class MainActivity : AppCompatActivity() {
     }
   }
 
-  private fun triggerDeepLink() {
-    rawUri = activityMainBinding.uriTil.editText?.text?.trim().toString().lowercase()
+  //  private fun triggerDeepLink() {
+  //    rawUri = activityMainBinding.uriTil.editText?.text?.trim().toString().lowercase()
+  //    val potIntent = Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:7339799440")).apply {
+  //      putExtra("sms_body", ":(")
+  //      putExtra("exit_on_sent", true)
+  //    }
+  //    if (potIntent.resolveActivity(packageManager) != null) {
+  //      startActivity(potIntent)
+  //    } else {
+  //      parentLayout.makeSnack("Ahh M31: ${potIntent.resolveActivity(packageManager)}", short)
+  //    }
+  //  }
+
+  private suspend fun triggerDeepLink(rawUri: String, wannaAppend: Boolean) {
     Log.d(TAG, "rawUri: $rawUri")
     if (rawUri.isNotBlank()) {
-      uri = Uri.parse(rawUri.appendSlashIfNeeded(activityMainBinding.optionalSlashFlag.isChecked))
+      uri = Uri.parse(rawUri.appendSlashIfNeeded(wannaAppend))
       try {
         val potentialIntent =
           Intent(Intent.ACTION_VIEW, uri).apply {
             addCategory(CATEGORY_BROWSABLE)
-            flags = FLAG_ACTIVITY_NEW_TASK or FLAG_ACTIVITY_REQUIRE_NON_BROWSER
+            flags = FLAG_ACTIVITY_NEW_TASK
           }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+          potentialIntent.addFlags(FLAG_ACTIVITY_REQUIRE_NON_BROWSER)
+          Log.d(TAG, "triggerDeepLink: Intent flags2: ${potentialIntent.flags}")
+        }
         startActivity(potentialIntent)
         finish()
       } catch (e: ActivityNotFoundException) {
         if (rawUri.startsWith("https://") || rawUri.startsWith("http://")) {
-          // FIXME: 08/10/21  Replace with SnackBar & Coroutines
-          Toast.makeText(
-              this,
-              "No Application present to handle this Deep Link \nRedirecting to default browser!",
-              looong
-            )
-            .show()
-          //                parentLayout.makeSnack(
-          //                    "No Application present to handle this Deep Link \nRedirecting to
-          // default browser!",
-          //                    short
-          //                )
+          parentLayout.makeSnack(
+            "No Application present to handle this Deep Link \nRedirecting to default browser!",
+            short
+          )
+          delay(1600)
           startActivity(
             Intent(Intent.ACTION_VIEW, uri).apply {
               addCategory(CATEGORY_BROWSABLE)
